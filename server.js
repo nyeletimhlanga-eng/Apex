@@ -358,7 +358,9 @@ app.post('/api/scan-meal', async (req, res) => {
             },
             {
               type: 'text',
-              text: `You are a precise nutrition analyst. Analyse this meal photo and respond ONLY with a valid JSON object, no markdown, no explanation, just raw JSON like this:
+              text: `You are a blunt elite sports nutritionist. Analyse this meal photo for NY — a 21-year-old doing a lean bulk, targeting 180g protein and 2800kcal daily.
+
+Respond ONLY with raw JSON, no markdown, no explanation:
 {
   "meal_name": "Chicken rice and broccoli",
   "items": [
@@ -367,18 +369,18 @@ app.post('/api/scan-meal', async (req, res) => {
     { "name": "Steamed broccoli", "calories": 55, "protein": 3.7, "carbs": 11, "fat": 0.6 }
   ],
   "totals": { "calories": 426, "protein": 38.7, "carbs": 56, "fat": 4.6 },
-  "score": 82,
-  "score_breakdown": {
-    "protein_quality": 90,
-    "carb_quality": 75,
-    "fat_quality": 85,
-    "micronutrient_density": 78,
-    "meal_balance": 80
-  },
-  "verdict": "Solid lean bulk meal. High protein, clean carbs. Could use healthy fats.",
-  "tip": "Add half an avocado or a drizzle of olive oil to round out the fat macros."
+  "score": 8,
+  "verdict": "High protein, clean carbs, low processed food. Near perfect lean bulk meal.",
+  "tip": "Add half an avocado to hit your fat target and boost micronutrients."
 }
-Estimate generously but realistically. Score is 0-100 based on nutritional quality for a young athletic male doing a lean bulk.`
+
+SCORING RULES (score must be 1-10, integers only):
+10 = Perfect. High protein, clean whole foods, ideal macros for lean bulk
+8-9 = Great. Mostly clean, good protein, minor improvements possible
+6-7 = Decent. Acceptable but missing something (low protein, excess fat, etc)
+4-5 = Average. Processed food, poor macro balance, won't help your goals
+2-3 = Poor. Fast food, mostly junk, low protein, high empty calories
+1 = Terrible. Pure junk, zero nutritional value (e.g. full bag of crisps, soda)`
             }
           ]
         }]
@@ -439,6 +441,12 @@ Rules:
   } catch (err) {
     res.json({ quote: "Pain is temporary. Quitting lasts forever.", author: "Lance Armstrong" });
   }
+});
+
+// Total days logged count
+app.get('/api/food/all-days', (req, res) => {
+  const row = db.prepare('SELECT COUNT(DISTINCT logged_date) as count FROM food_logs').get();
+  res.json({ count: row.count || 0 });
 });
 
 // Fallback to index.html for SPA
