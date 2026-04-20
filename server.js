@@ -399,10 +399,12 @@ Estimate generously but realistically. Score is 0-100 based on nutritional quali
 
 // ── Daily motivational quote ─────────────────────────────────────────────────
 app.get('/api/quote/:date', async (req, res) => {
-  // Check if we already generated one today
+  // Check cache
   const cached = db.prepare('SELECT content FROM messages WHERE role = ? AND DATE(created_at) = ? LIMIT 1')
     .get('quote', req.params.date);
-  if (cached) return res.json({ quote: cached.content });
+  if (cached) {
+    try { return res.json(JSON.parse(cached.content)); } catch(e) {}
+  }
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -414,24 +416,28 @@ app.get('/api/quote/:date', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 150,
+        max_tokens: 120,
         messages: [{
           role: 'user',
-          content: `Generate one short, hard-hitting motivational quote for NY — a 21-year-old in London grinding fitness, business (ReliefLab dropshipping store), and academics simultaneously. 
-Make it feel personal to that grind. No fluff, no clichés like "believe in yourself". Raw, direct, like something a mentor who's been through it would say. 
-Max 2 sentences. No quotation marks. No attribution. Just the quote.`
+          content: `Pick one famous, real motivational quote from a well-known athlete, rapper, entrepreneur or leader (e.g. Kobe Bryant, Muhammad Ali, David Goggins, Jay-Z, Michael Jordan, Conor McGregor, Arnold Schwarzenegger, Rocky Balboa, Nipsey Hussle, etc).
+
+Rules:
+- Must be a real well-known quote, max 18 words
+- Respond ONLY with raw JSON, no markdown: {"quote": "...", "author": "..."}`
         }]
       })
     });
 
     const data = await response.json();
-    const quote = data.content?.[0]?.text?.trim() || "Show up today like your future self is watching.";
+    const raw = data.content?.[0]?.text?.trim() || '{}';
+    const clean = raw.replace(/\`\`\`json|\`\`\`/g, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(clean); } catch(e) { parsed = { quote: "Pain is temporary. Quitting lasts forever.", author: "Lance Armstrong" }; }
 
-    // Cache it
-    db.prepare('INSERT INTO messages (role, content) VALUES (?, ?)').run('quote', quote);
-    res.json({ quote });
+    db.prepare('INSERT INTO messages (role, content) VALUES (?, ?)').run('quote', JSON.stringify(parsed));
+    res.json(parsed);
   } catch (err) {
-    res.json({ quote: "The grind doesn't care about your mood. Get to work." });
+    res.json({ quote: "Pain is temporary. Quitting lasts forever.", author: "Lance Armstrong" });
   }
 });
 
