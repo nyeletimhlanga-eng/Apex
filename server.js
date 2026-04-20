@@ -73,6 +73,11 @@ db.exec(`
   );
 `);
 
+// ── Wipe old quote cache on startup (ensures fresh styled quotes) ───────────
+try {
+  db.prepare("DELETE FROM messages WHERE role = 'quote'").run();
+} catch(e) {}
+
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
