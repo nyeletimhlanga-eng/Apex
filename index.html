@@ -639,9 +639,10 @@
     <div class="page active" id="page-dash">
 
       <!-- Daily Quote -->
-      <div id="quote-card" style="background:linear-gradient(135deg,#0F1218,#1A0800);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:4px;position:relative;overflow:hidden;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px;">⚡ APEX DAILY</div>
-        <div id="quote-text" style="font-size:15px;line-height:1.5;font-style:italic;color:var(--text);">Loading your quote...</div>
+      <div id="quote-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px;margin-bottom:4px;border-left:3px solid var(--accent);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:10px;">⚡ QUOTE OF THE DAY</div>
+        <div id="quote-text" style="font-size:16px;line-height:1.55;font-style:italic;color:var(--text);font-weight:500;">Loading...</div>
+        <div id="quote-author" style="font-size:12px;color:var(--muted);margin-top:8px;font-weight:600;letter-spacing:0.5px;"></div>
       </div>
 
       <div class="section-title">TODAY'S NUTRITION</div>
@@ -1185,9 +1186,13 @@
   async function loadQuote() {
     try {
       const data = await api('GET', `/api/quote/${TODAY}`);
-      document.getElementById('quote-text').textContent = data.quote;
+      document.getElementById('quote-text').textContent = data.quote || "Pain is temporary. Quitting lasts forever.";
+      const authorEl = document.getElementById('quote-author');
+      if (authorEl) authorEl.textContent = data.author ? `— ${data.author}` : '';
     } catch(e) {
-      document.getElementById('quote-text').textContent = "The grind doesn't care about your mood. Get to work.";
+      document.getElementById('quote-text').textContent = "Pain is temporary. Quitting lasts forever.";
+      const authorEl = document.getElementById('quote-author');
+      if (authorEl) authorEl.textContent = '— Lance Armstrong';
     }
   }
 
