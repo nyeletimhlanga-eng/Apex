@@ -635,6 +635,15 @@
 
     <!-- ── Dashboard ── -->
     <div class="page active" id="page-dash">
+    <!-- ── Dashboard ── -->
+    <div class="page active" id="page-dash">
+
+      <!-- Daily Quote -->
+      <div id="quote-card" style="background:linear-gradient(135deg,#0F1218,#1A0800);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:4px;position:relative;overflow:hidden;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px;">⚡ APEX DAILY</div>
+        <div id="quote-text" style="font-size:15px;line-height:1.5;font-style:italic;color:var(--text);">Loading your quote...</div>
+      </div>
+
       <div class="section-title">TODAY'S NUTRITION</div>
       <div class="macro-grid">
         <div class="macro-card calories">
@@ -670,8 +679,8 @@
         <button class="quick-action" onclick="nav('log')">
           <span class="qa-icon">🍗</span> Log Food
         </button>
-        <button class="quick-action" onclick="nav('log'); switchLogTab('exercise')">
-          <span class="qa-icon">💪</span> Log Exercise
+        <button class="quick-action" onclick="openScanModal()">
+          <span class="qa-icon">📸</span> Scan Meal
         </button>
         <button class="quick-action" onclick="openMetricModal()">
           <span class="qa-icon">⚖️</span> Log Weight
@@ -686,6 +695,7 @@
         <div class="empty"><div class="empty-icon">🏋️</div>No exercises logged yet</div>
       </div>
     </div>
+
 
     <!-- ── Chat ── -->
     <div class="page" id="page-chat">
@@ -808,6 +818,23 @@
     </div>
     <button class="modal-btn" onclick="addGoal()">Add Goal</button>
     <button class="modal-btn" style="background:var(--dim);margin-top:8px;" onclick="closeModal('goal-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Scan modal -->
+<div class="modal-overlay" id="scan-modal">
+  <div class="modal" style="max-height:90dvh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">SCAN MEAL</div>
+    <div id="scan-upload-area" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;margin-bottom:12px;" onclick="document.getElementById('scan-file-input').click()">
+      <div style="font-size:40px;margin-bottom:8px;">📸</div>
+      <div style="font-size:14px;color:var(--muted);">Tap to take photo or upload</div>
+      <div id="scan-preview" style="margin-top:12px;display:none;"><img id="scan-img" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;" /></div>
+    </div>
+    <input type="file" id="scan-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleScanImage(event)">
+    <div id="scan-result" style="display:none;"></div>
+    <button class="modal-btn" id="scan-btn" onclick="scanMeal()">Analyse Meal</button>
+    <button class="modal-btn" style="background:var(--dim);margin-top:8px;" onclick="closeScanModal()">Cancel</button>
   </div>
 </div>
 
@@ -1153,8 +1180,181 @@
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
 
+
+  // ── Daily Quote ───────────────────────────────────────────────────────────────
+  async function loadQuote() {
+    try {
+      const data = await api('GET', `/api/quote/${TODAY}`);
+      document.getElementById('quote-text').textContent = data.quote;
+    } catch(e) {
+      document.getElementById('quote-text').textContent = "The grind doesn't care about your mood. Get to work.";
+    }
+  }
+
+  // ── Meal Scan ────────────────────────────────────────────────────────────────
+  let scanImageBase64 = null;
+  let scanImageType = 'image/jpeg';
+
+  function openScanModal() {
+    scanImageBase64 = null;
+    document.getElementById('scan-preview').style.display = 'none';
+    document.getElementById('scan-result').style.display = 'none';
+    document.getElementById('scan-btn').textContent = 'Analyse Meal';
+    document.getElementById('scan-btn').disabled = false;
+    document.getElementById('scan-modal').classList.add('open');
+  }
+
+  function closeScanModal() {
+    document.getElementById('scan-modal').classList.remove('open');
+  }
+
+  function handleScanImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    scanImageType = file.type || 'image/jpeg';
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      scanImageBase64 = ev.target.result.split(',')[1];
+      document.getElementById('scan-img').src = ev.target.result;
+      document.getElementById('scan-preview').style.display = 'block';
+      document.getElementById('scan-result').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function scanMeal() {
+    if (!scanImageBase64) {
+      alert('Take or upload a photo first.');
+      return;
+    }
+    const btn = document.getElementById('scan-btn');
+    btn.textContent = 'Analysing...';
+    btn.disabled = true;
+
+    try {
+      const result = await api('POST', '/api/scan-meal', {
+        image: scanImageBase64,
+        mediaType: scanImageType
+      });
+
+      if (result.error) {
+        btn.textContent = 'Error. Try again.';
+        btn.disabled = false;
+        return;
+      }
+
+      renderScanResult(result);
+      btn.textContent = 'Log This Meal';
+      btn.disabled = false;
+      btn.onclick = () => logScannedMeal(result);
+    } catch(e) {
+      btn.textContent = 'Error. Try again.';
+      btn.disabled = false;
+    }
+  }
+
+  function getScoreColor(score) {
+    if (score >= 80) return '#00E676';
+    if (score >= 60) return '#FFD600';
+    return '#FF4500';
+  }
+
+  function renderScanResult(r) {
+    const el = document.getElementById('scan-result');
+    const score = r.score || 0;
+    const color = getScoreColor(score);
+    const breakdown = r.score_breakdown || {};
+    const circumference = 2 * Math.PI * 36;
+    const dash = (score / 100) * circumference;
+
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <!-- Meal name -->
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:12px;">${r.meal_name || 'Meal Analysis'}</div>
+
+        <!-- Score ring -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="flex-shrink:0;">
+            <circle cx="44" cy="44" r="36" fill="none" stroke="#1E2530" stroke-width="8"/>
+            <circle cx="44" cy="44" r="36" fill="none" stroke="${color}" stroke-width="8"
+              stroke-dasharray="${dash.toFixed(1)} ${circumference.toFixed(1)}"
+              stroke-linecap="round"
+              transform="rotate(-90 44 44)"
+              style="transition:stroke-dasharray 0.8s ease;"/>
+            <text x="44" y="48" text-anchor="middle" fill="${color}" font-family="Bebas Neue,sans-serif" font-size="22">${score}</text>
+          </svg>
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Nutrition Score</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5;">${r.verdict || ''}</div>
+          </div>
+        </div>
+
+        <!-- Score breakdown bars -->
+        <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Breakdown</div>
+          ${Object.entries(breakdown).map(([key, val]) => `
+            <div style="margin-bottom:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span style="color:var(--muted);text-transform:capitalize;">${key.replace(/_/g,' ')}</span>
+                <span style="color:${getScoreColor(val)};font-weight:600;">${val}</span>
+              </div>
+              <div style="height:4px;background:var(--dim);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${val}%;background:${getScoreColor(val)};border-radius:2px;transition:width 0.6s ease;"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Macro totals -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+          ${[
+            ['Kcal', r.totals?.calories || 0, '#FF4500'],
+            ['Protein', (r.totals?.protein || 0) + 'g', '#00E676'],
+            ['Carbs', (r.totals?.carbs || 0) + 'g', '#FFD600'],
+            ['Fat', (r.totals?.fat || 0) + 'g', '#FF9800']
+          ].map(([label, val, col]) => `
+            <div style="background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${col};">${val}</div>
+              <div style="font-size:10px;color:var(--muted);">${label}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Items found -->
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Items Detected</div>
+        ${(r.items || []).map(item => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:13px;">${item.name}</span>
+            <span style="font-size:12px;color:var(--muted);">${item.calories}kcal · P:${item.protein}g</span>
+          </div>
+        `).join('')}
+
+        <!-- Tip -->
+        ${r.tip ? `<div style="margin-top:12px;padding:10px 12px;background:rgba(255,69,0,0.1);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:13px;color:var(--text);line-height:1.5;">💡 ${r.tip}</div>` : ''}
+      </div>
+    `;
+  }
+
+  async function logScannedMeal(result) {
+    const name = result.meal_name || 'Scanned meal';
+    await api('POST', '/api/food', {
+      name,
+      calories: result.totals?.calories || 0,
+      protein: result.totals?.protein || 0,
+      carbs: result.totals?.carbs || 0,
+      fat: result.totals?.fat || 0,
+      logged_date: TODAY
+    });
+    closeScanModal();
+    loadDash();
+    alert(`✅ "${name}" logged!`);
+  }
+
+
   // ── Init ─────────────────────────────────────────────────────────────────────
   loadDash();
+  loadQuote();
 </script>
 </body>
 </html>
