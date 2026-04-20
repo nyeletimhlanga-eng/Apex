@@ -399,6 +399,12 @@ SCORING RULES (score must be 1-10, integers only):
   }
 });
 
+// Force clear quote cache (call once to reset)
+app.delete('/api/quote/cache', (req, res) => {
+  db.prepare("DELETE FROM messages WHERE role = 'quote'").run();
+  res.json({ success: true });
+});
+
 // ── Daily motivational quote ─────────────────────────────────────────────────
 app.get('/api/quote/:date', async (req, res) => {
   // Check cache
