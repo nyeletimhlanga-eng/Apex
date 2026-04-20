@@ -333,6 +333,108 @@ function getStreak() {
   return streak;
 }
 
+// ── Meal photo scan ──────────────────────────────────────────────────────────
+app.post('/api/scan-meal', async (req, res) => {
+  const { image, mediaType } = req.body;
+  if (!image) return res.status(400).json({ error: 'No image provided' });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image }
+            },
+            {
+              type: 'text',
+              text: `You are a precise nutrition analyst. Analyse this meal photo and respond ONLY with a valid JSON object, no markdown, no explanation, just raw JSON like this:
+{
+  "meal_name": "Chicken rice and broccoli",
+  "items": [
+    { "name": "Grilled chicken breast", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6 },
+    { "name": "White rice (1 cup)", "calories": 206, "protein": 4, "carbs": 45, "fat": 0.4 },
+    { "name": "Steamed broccoli", "calories": 55, "protein": 3.7, "carbs": 11, "fat": 0.6 }
+  ],
+  "totals": { "calories": 426, "protein": 38.7, "carbs": 56, "fat": 4.6 },
+  "score": 82,
+  "score_breakdown": {
+    "protein_quality": 90,
+    "carb_quality": 75,
+    "fat_quality": 85,
+    "micronutrient_density": 78,
+    "meal_balance": 80
+  },
+  "verdict": "Solid lean bulk meal. High protein, clean carbs. Could use healthy fats.",
+  "tip": "Add half an avocado or a drizzle of olive oil to round out the fat macros."
+}
+Estimate generously but realistically. Score is 0-100 based on nutritional quality for a young athletic male doing a lean bulk.`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) return res.status(500).json({ error: data.error.message });
+
+    const text = data.content?.[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    res.json(parsed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Daily motivational quote ─────────────────────────────────────────────────
+app.get('/api/quote/:date', async (req, res) => {
+  // Check if we already generated one today
+  const cached = db.prepare('SELECT content FROM messages WHERE role = ? AND DATE(created_at) = ? LIMIT 1')
+    .get('quote', req.params.date);
+  if (cached) return res.json({ quote: cached.content });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 150,
+        messages: [{
+          role: 'user',
+          content: `Generate one short, hard-hitting motivational quote for NY — a 21-year-old in London grinding fitness, business (ReliefLab dropshipping store), and academics simultaneously. 
+Make it feel personal to that grind. No fluff, no clichés like "believe in yourself". Raw, direct, like something a mentor who's been through it would say. 
+Max 2 sentences. No quotation marks. No attribution. Just the quote.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const quote = data.content?.[0]?.text?.trim() || "Show up today like your future self is watching.";
+
+    // Cache it
+    db.prepare('INSERT INTO messages (role, content) VALUES (?, ?)').run('quote', quote);
+    res.json({ quote });
+  } catch (err) {
+    res.json({ quote: "The grind doesn't care about your mood. Get to work." });
+  }
+});
+
 // Fallback to index.html for SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
