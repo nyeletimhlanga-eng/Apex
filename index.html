@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080A0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="APEX">
+<link rel="manifest" href="/manifest.json">
+<title>APEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080A0F;
+    --surface: #0F1218;
+    --surface2: #161B24;
+    --border: #1E2530;
+    --accent: #FF4500;
+    --accent2: #FF6B35;
+    --green: #00E676;
+    --yellow: #FFD600;
+    --text: #F0F4FF;
+    --muted: #5A6478;
+    --dim: #2A3040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--yellow);
+  }
+
+  .date-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .nav-btn .icon { font-size: 20px; }
+  .nav-btn.active { color: var(--accent); }
+
+  /* ── Pages ── */
+  .pages { flex: 1; overflow: hidden; position: relative; }
+
+  .page {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    display: none;
+    padding: 16px 20px;
+    padding-bottom: 20px;
+  }
+
+  .page.active { display: block; }
+
+  /* ── Dashboard ── */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+
+  .macro-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .macro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .macro-card.calories {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--surface) 0%, #1A0800 100%);
+    border-color: var(--accent);
+  }
+
+  .macro-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .macro-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .macro-card.calories .macro-value { font-size: 42px; color: var(--accent); }
+
+  .macro-unit { font-size: 13px; color: var(--muted); margin-left: 2px; }
+
+  .macro-bar {
+    height: 3px;
+    background: var(--dim);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .macro-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    background: var(--accent);
+  }
+
+  .macro-bar-fill.protein { background: var(--green); }
+  .macro-bar-fill.carbs { background: var(--yellow); }
+  .macro-bar-fill.fat { background: #FF9800; }
+
+  .goal-text { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-action {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .quick-action:active { background: var(--surface2); }
+  .quick-action .qa-icon { font-size: 22px; }
+
+  /* ── Chat ── */
+  #page-chat {
+    display: none;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  #page-chat.active { display: flex; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .msg { display: flex; gap: 10px; align-items: flex-end; }
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .msg.user .msg-avatar { background: var(--accent); color: white; }
+  .msg.assistant .msg-avatar { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  .msg-bubble {
+    max-width: 78%;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--accent);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg.assistant .msg-bubble {
+    background: var(--surface2);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .msg-bubble strong { color: var(--accent2); }
+  .msg-bubble ul { padding-left: 16px; margin: 6px 0; }
+  .msg-bubble li { margin-bottom: 4px; }
+
+  .msg-time { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+
+  .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+  .dot {
+    width: 6px; height: 6px;
+    background: var(--muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .chat-input-wrap {
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.4;
+    -webkit-appearance: none;
+  }
+
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+  }
+
+  .send-btn:disabled { opacity: 0.4; }
+
+  /* ── Log (food/exercise) ── */
+  .log-tabs {
+    display: flex;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+    margin-bottom: 16px;
+  }
+
+  .log-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .log-tab.active { background: var(--accent); color: white; }
+
+  .log-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .form-row:last-child { margin-bottom: 0; }
+
+  .input-field {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    min-width: 0;
+    -webkit-appearance: none;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--muted); }
+
+  .add-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .log-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .log-item-info { flex: 1; min-width: 0; }
+  .log-item-name { font-weight: 600; font-size: 14px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-item-macros { font-size: 12px; color: var(--muted); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── Goals ── */
+  .goal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .goal-card.done { opacity: 0.45; }
+
+  .goal-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green);
+    font-size: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .goal-card.done .goal-check { background: var(--green); border-color: var(--green); }
+
+  .goal-info { flex: 1; min-width: 0; }
+  .goal-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .goal-meta { font-size: 12px; color: var(--muted); }
+
+  .cat-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .cat-fitness { background: #002800; color: var(--green); }
+  .cat-business { background: #1A0800; color: var(--accent); }
+  .cat-general { background: var(--dim); color: var(--muted); }
+  .cat-academic { background: #00001A; color: #6699FF; }
+
+  /* ── Metrics ── */
+  .metrics-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .metric-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 430px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--dim);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .modal-field {
+    margin-bottom: 10px;
+  }
+
+  .modal-label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+
+  .modal-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 14px;
+  }
+
+  select.input-field {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A6478'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">APEX</div>
+    <div class="header-right">
+      <div class="streak-badge">🔥 <span id="streak-count">0</span></div>
+      <div class="date-label" id="date-label"></div>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages">
+
+    <!-- ── Dashboard ── -->
+    <div class="page active" id="page-dash">
+      <div class="section-title">TODAY'S NUTRITION</div>
+      <div class="macro-grid">
+        <div class="macro-card calories">
+          <div>
+            <div class="macro-label">Calories</div>
+            <div><span class="macro-value" id="d-kcal">0</span><span class="macro-unit">kcal</span></div>
+            <div class="goal-text">Goal: 2800kcal</div>
+          </div>
+          <div style="font-size:42px;">🔥</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-label">Protein</div>
+          <div><span class="macro-value" id="d-prot">0</span><span class="macro-unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill protein" id="bar-prot" style="width:0%"></div></div>
+          <div class="goal-text">Goal: 180g</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-label">Carbs</div>
+          <div><span class="macro-value" id="d-carb">0</span><span class="macro-unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill carbs" id="bar-carb" style="width:0%"></div></div>
+          <div class="goal-text">Goal: 300g</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-label">Fat</div>
+          <div><span class="macro-value" id="d-fat">0</span><span class="macro-unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill fat" id="bar-fat" style="width:0%"></div></div>
+          <div class="goal-text">Goal: 80g</div>
+        </div>
+      </div>
+
+      <div class="section-title">QUICK ADD</div>
+      <div class="quick-actions">
+        <button class="quick-action" onclick="nav('log')">
+          <span class="qa-icon">🍗</span> Log Food
+        </button>
+        <button class="quick-action" onclick="nav('log'); switchLogTab('exercise')">
+          <span class="qa-icon">💪</span> Log Exercise
+        </button>
+        <button class="quick-action" onclick="openMetricModal()">
+          <span class="qa-icon">⚖️</span> Log Weight
+        </button>
+        <button class="quick-action" onclick="nav('chat')">
+          <span class="qa-icon">🤖</span> Ask APEX
+        </button>
+      </div>
+
+      <div class="section-title">TODAY'S EXERCISE</div>
+      <div id="dash-exercise" class="log-list">
+        <div class="empty"><div class="empty-icon">🏋️</div>No exercises logged yet</div>
+      </div>
+    </div>
+
+    <!-- ── Chat ── -->
+    <div class="page" id="page-chat">
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg assistant">
+          <div class="msg-avatar">A</div>
+          <div>
+            <div class="msg-bubble">Yo NY 👊 I'm locked in and watching. Everything you log, every goal you set — I remember all of it. What are we working on?</div>
+            <div class="msg-time">APEX</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Message APEX..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+      </div>
+    </div>
+
+    <!-- ── Log ── -->
+    <div class="page" id="page-log">
+      <div class="log-tabs">
+        <button class="log-tab active" id="tab-food" onclick="switchLogTab('food')">🍗 Food</button>
+        <button class="log-tab" id="tab-exercise" onclick="switchLogTab('exercise')">💪 Exercise</button>
+      </div>
+
+      <!-- Food form -->
+      <div id="food-panel">
+        <div class="log-form">
+          <div class="form-row">
+            <input class="input-field" id="food-name" placeholder="Food name" style="flex:2">
+            <input class="input-field" id="food-kcal" placeholder="kcal" type="number">
+          </div>
+          <div class="form-row">
+            <input class="input-field" id="food-prot" placeholder="P(g)" type="number">
+            <input class="input-field" id="food-carb" placeholder="C(g)" type="number">
+            <input class="input-field" id="food-fat" placeholder="F(g)" type="number">
+            <button class="add-btn" onclick="addFood()">Add</button>
+          </div>
+        </div>
+        <div id="food-list" class="log-list"></div>
+      </div>
+
+      <!-- Exercise form -->
+      <div id="exercise-panel" style="display:none">
+        <div class="log-form">
+          <div class="form-row">
+            <input class="input-field" id="ex-name" placeholder="Exercise" style="flex:2">
+            <input class="input-field" id="ex-sets" placeholder="Sets" type="number">
+          </div>
+          <div class="form-row">
+            <input class="input-field" id="ex-reps" placeholder="Reps" type="number">
+            <input class="input-field" id="ex-weight" placeholder="kg" type="number">
+            <button class="add-btn" onclick="addExercise()">Add</button>
+          </div>
+        </div>
+        <div id="exercise-list" class="log-list"></div>
+      </div>
+    </div>
+
+    <!-- ── Goals ── -->
+    <div class="page" id="page-goals">
+      <button class="add-btn" style="width:100%;margin-bottom:16px;padding:12px;border-radius:12px;font-size:15px;" onclick="openGoalModal()">+ New Goal</button>
+      <div id="goals-list"></div>
+    </div>
+
+    <!-- ── Metrics ── -->
+    <div class="page" id="page-metrics">
+      <button class="add-btn" style="width:100%;margin-bottom:16px;padding:12px;border-radius:12px;font-size:15px;" onclick="openMetricModal()">+ Log Today's Stats</button>
+      <div class="section-title">BODY METRICS HISTORY</div>
+      <div id="metrics-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-dash" onclick="nav('dash')">
+      <span class="icon">⚡</span>Today
+    </button>
+    <button class="nav-btn" id="nav-chat" onclick="nav('chat')">
+      <span class="icon">🤖</span>Coach
+    </button>
+    <button class="nav-btn" id="nav-log" onclick="nav('log')">
+      <span class="icon">➕</span>Log
+    </button>
+    <button class="nav-btn" id="nav-goals" onclick="nav('goals')">
+      <span class="icon">🎯</span>Goals
+    </button>
+    <button class="nav-btn" id="nav-metrics" onclick="nav('metrics')">
+      <span class="icon">📊</span>Stats
+    </button>
+  </nav>
+</div>
+
+<!-- Goal modal -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">NEW GOAL</div>
+    <div class="modal-field">
+      <div class="modal-label">Title</div>
+      <input class="input-field" id="g-title" placeholder="e.g. Hit 180g protein daily" style="width:100%">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Category</div>
+      <select class="input-field" id="g-cat" style="width:100%">
+        <option value="fitness">Fitness</option>
+        <option value="business">Business</option>
+        <option value="academic">Academic</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Target (optional)</div>
+      <input class="input-field" id="g-target" placeholder="e.g. 80kg bodyweight" style="width:100%">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Deadline (optional)</div>
+      <input class="input-field" id="g-deadline" type="date" style="width:100%">
+    </div>
+    <button class="modal-btn" onclick="addGoal()">Add Goal</button>
+    <button class="modal-btn" style="background:var(--dim);margin-top:8px;" onclick="closeModal('goal-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Metric modal -->
+<div class="modal-overlay" id="metric-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">LOG STATS</div>
+    <div class="modal-field">
+      <div class="modal-label">Weight (kg)</div>
+      <input class="input-field" id="m-weight" type="number" step="0.1" placeholder="e.g. 75.5" style="width:100%">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Body Fat % (optional)</div>
+      <input class="input-field" id="m-bf" type="number" step="0.1" placeholder="e.g. 14.2" style="width:100%">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Notes (optional)</div>
+      <input class="input-field" id="m-notes" placeholder="e.g. Morning, fasted" style="width:100%">
+    </div>
+    <button class="modal-btn" onclick="addMetric()">Save</button>
+    <button class="modal-btn" style="background:var(--dim);margin-top:8px;" onclick="closeModal('metric-modal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+  const TODAY = new Date().toISOString().slice(0, 10);
+  let currentPage = 'dash';
+  let currentLogTab = 'food';
+
+  // ── Date label ──────────────────────────────────────────────────────────────
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const now = new Date();
+  document.getElementById('date-label').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+
+  // ── Navigation ───────────────────────────────────────────────────────────────
+  function nav(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`page-${page}`).classList.add('active');
+    document.getElementById(`nav-${page}`).classList.add('active');
+    currentPage = page;
+    if (page === 'dash') loadDash();
+    if (page === 'log') loadLog();
+    if (page === 'goals') loadGoals();
+    if (page === 'metrics') loadMetrics();
+  }
+
+  function switchLogTab(tab) {
+    currentLogTab = tab;
+    document.getElementById('tab-food').classList.toggle('active', tab === 'food');
+    document.getElementById('tab-exercise').classList.toggle('active', tab === 'exercise');
+    document.getElementById('food-panel').style.display = tab === 'food' ? 'block' : 'none';
+    document.getElementById('exercise-panel').style.display = tab === 'exercise' ? 'block' : 'none';
+    loadLog();
+  }
+
+  // ── API helper ───────────────────────────────────────────────────────────────
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(path, opts);
+    return res.json();
+  }
+
+  // ── Dashboard ────────────────────────────────────────────────────────────────
+  async function loadDash() {
+    const data = await api('GET', `/api/summary/${TODAY}`);
+    const t = data.totals;
+    document.getElementById('d-kcal').textContent = Math.round(t.calories);
+    document.getElementById('d-prot').textContent = Math.round(t.protein);
+    document.getElementById('d-carb').textContent = Math.round(t.carbs);
+    document.getElementById('d-fat').textContent = Math.round(t.fat);
+    document.getElementById('bar-prot').style.width = Math.min(100, (t.protein / 180) * 100) + '%';
+    document.getElementById('bar-carb').style.width = Math.min(100, (t.carbs / 300) * 100) + '%';
+    document.getElementById('bar-fat').style.width = Math.min(100, (t.fat / 80) * 100) + '%';
+    document.getElementById('streak-count').textContent = data.streak;
+
+    const exEl = document.getElementById('dash-exercise');
+    if (data.exercise.length === 0) {
+      exEl.innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div>No exercises logged yet</div>';
+    } else {
+      exEl.innerHTML = data.exercise.map(e => `
+        <div class="log-item">
+          <div class="log-item-info">
+            <div class="log-item-name">${e.name}</div>
+            <div class="log-item-macros">${e.sets ? e.sets + ' sets' : ''}${e.reps ? ' × ' + e.reps + ' reps' : ''}${e.weight ? ' @ ' + e.weight + 'kg' : ''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ── Food log ─────────────────────────────────────────────────────────────────
+  async function loadLog() {
+    if (currentLogTab === 'food') {
+      const foods = await api('GET', `/api/food/${TODAY}`);
+      const el = document.getElementById('food-list');
+      if (!foods.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">🍗</div>Nothing logged yet</div>';
+      } else {
+        el.innerHTML = foods.map(f => `
+          <div class="log-item">
+            <div class="log-item-info">
+              <div class="log-item-name">${f.name}</div>
+              <div class="log-item-macros">${f.calories}kcal | P:${f.protein}g C:${f.carbs}g F:${f.fat}g</div>
+            </div>
+            <button class="delete-btn" onclick="deleteFood(${f.id})">✕</button>
+          </div>
+        `).join('');
+      }
+    } else {
+      const exercises = await api('GET', `/api/exercise/${TODAY}`);
+      const el = document.getElementById('exercise-list');
+      if (!exercises.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">💪</div>No exercises yet</div>';
+      } else {
+        el.innerHTML = exercises.map(e => `
+          <div class="log-item">
+            <div class="log-item-info">
+              <div class="log-item-name">${e.name}</div>
+              <div class="log-item-macros">${e.sets ? e.sets + ' sets' : ''}${e.reps ? ' × ' + e.reps : ''}${e.weight ? ' @ ' + e.weight + 'kg' : ''}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteExercise(${e.id})">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  async function addFood() {
+    const name = document.getElementById('food-name').value.trim();
+    if (!name) return;
+    await api('POST', '/api/food', {
+      name,
+      calories: +document.getElementById('food-kcal').value || 0,
+      protein: +document.getElementById('food-prot').value || 0,
+      carbs: +document.getElementById('food-carb').value || 0,
+      fat: +document.getElementById('food-fat').value || 0,
+      logged_date: TODAY
+    });
+    ['food-name','food-kcal','food-prot','food-carb','food-fat'].forEach(id => document.getElementById(id).value = '');
+    loadLog();
+  }
+
+  async function deleteFood(id) {
+    await api('DELETE', `/api/food/${id}`);
+    loadLog();
+  }
+
+  async function addExercise() {
+    const name = document.getElementById('ex-name').value.trim();
+    if (!name) return;
+    await api('POST', '/api/exercise', {
+      name,
+      sets: +document.getElementById('ex-sets').value || null,
+      reps: +document.getElementById('ex-reps').value || null,
+      weight: +document.getElementById('ex-weight').value || null,
+      logged_date: TODAY
+    });
+    ['ex-name','ex-sets','ex-reps','ex-weight'].forEach(id => document.getElementById(id).value = '');
+    loadLog();
+  }
+
+  async function deleteExercise(id) {
+    await api('DELETE', `/api/exercise/${id}`);
+    loadLog();
+  }
+
+  // ── Goals ────────────────────────────────────────────────────────────────────
+  async function loadGoals() {
+    const goals = await api('GET', '/api/goals');
+    const el = document.getElementById('goals-list');
+    if (!goals.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div>No goals yet. Set one.</div>';
+      return;
+    }
+    el.innerHTML = goals.map(g => `
+      <div class="goal-card ${g.completed ? 'done' : ''}">
+        <button class="goal-check" onclick="toggleGoal(${g.id}, ${g.completed})">${g.completed ? '✓' : ''}</button>
+        <div class="goal-info">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span class="cat-badge cat-${g.category}">${g.category}</span>
+          </div>
+          <div class="goal-title">${g.title}</div>
+          <div class="goal-meta">${g.target ? g.target + ' · ' : ''}${g.deadline ? 'by ' + g.deadline : ''}</div>
+        </div>
+        <button class="delete-btn" onclick="deleteGoal(${g.id})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function openGoalModal() {
+    document.getElementById('goal-modal').classList.add('open');
+  }
+
+  async function addGoal() {
+    const title = document.getElementById('g-title').value.trim();
+    if (!title) return;
+    await api('POST', '/api/goals', {
+      title,
+      category: document.getElementById('g-cat').value,
+      target: document.getElementById('g-target').value,
+      deadline: document.getElementById('g-deadline').value || null
+    });
+    closeModal('goal-modal');
+    ['g-title','g-target','g-deadline'].forEach(id => document.getElementById(id).value = '');
+    loadGoals();
+  }
+
+  async function toggleGoal(id, current) {
+    await api('PATCH', `/api/goals/${id}`, { completed: !current });
+    loadGoals();
+  }
+
+  async function deleteGoal(id) {
+    await api('DELETE', `/api/goals/${id}`);
+    loadGoals();
+  }
+
+  // ── Metrics ──────────────────────────────────────────────────────────────────
+  async function loadMetrics() {
+    const metrics = await api('GET', '/api/metrics');
+    const el = document.getElementById('metrics-list');
+    if (!metrics.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No stats logged yet</div>';
+      return;
+    }
+    el.innerHTML = metrics.map(m => `
+      <div class="metrics-card">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${m.logged_date}</div>
+          <div style="font-size:13px;">${m.notes || ''}</div>
+        </div>
+        <div style="text-align:right;">
+          ${m.weight ? `<div class="metric-val">${m.weight}<span style="font-size:14px;color:var(--muted)">kg</span></div>` : ''}
+          ${m.body_fat ? `<div style="font-size:13px;color:var(--muted)">${m.body_fat}% BF</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openMetricModal() {
+    document.getElementById('metric-modal').classList.add('open');
+  }
+
+  async function addMetric() {
+    await api('POST', '/api/metrics', {
+      weight: +document.getElementById('m-weight').value || null,
+      body_fat: +document.getElementById('m-bf').value || null,
+      notes: document.getElementById('m-notes').value,
+      logged_date: TODAY
+    });
+    closeModal('metric-modal');
+    ['m-weight','m-bf','m-notes'].forEach(id => document.getElementById(id).value = '');
+    loadMetrics();
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────────────────
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    appendMsg('user', text);
+
+    const typing = appendTyping();
+
+    try {
+      const data = await api('POST', '/api/chat', { message: text });
+      typing.remove();
+      if (data.error) {
+        appendMsg('assistant', '⚠️ ' + data.error);
+      } else {
+        appendMsg('assistant', formatMsg(data.reply));
+      }
+    } catch (e) {
+      typing.remove();
+      appendMsg('assistant', '⚠️ Connection error. Try again.');
+    }
+
+    document.getElementById('send-btn').disabled = false;
+  }
+
+  function formatMsg(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>')
+      .replace(/^• /gm, '• ');
+  }
+
+  function appendMsg(role, content) {
+    const el = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      <div class="msg-avatar">${role === 'user' ? 'NY' : 'A'}</div>
+      <div>
+        <div class="msg-bubble">${content}</div>
+        <div class="msg-time">${role === 'user' ? 'You' : 'APEX'}</div>
+      </div>`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function appendTyping() {
+    const el = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.innerHTML = `<div class="msg-avatar">A</div><div class="msg-bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+    return div;
+  }
+
+  // ── Modals ───────────────────────────────────────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  // ── PWA ──────────────────────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  loadDash();
+</script>
+</body>
+</html>
