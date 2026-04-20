@@ -76,7 +76,7 @@ db.exec(`
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // ── Helper: build APEX system prompt with full memory context ────────────────
 function buildSystemPrompt(todayStr) {
@@ -335,7 +335,7 @@ function getStreak() {
 
 // Fallback to index.html for SPA
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`APEX running on port ${PORT}`));
